@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.0.0
+// @version      1.0.1
 // @description  Color Coding the positions. Number updates and more OCs by Neopolitan
 // @author       NotIbbyz, Neopolitan
 // @match        https://www.torn.com/factions.php?step=your*
@@ -212,6 +212,16 @@
                 "DRIVER": 50
             }
         },
+        { // These numbers are just placeholders, replace when more information is known
+            OCName: "Lock Stock",
+            Positions: {
+                "Hacker": 65,
+                "Assassin": 65,
+                "Muscle #1": 65,
+                "Muscle #2": 65,
+                "Smuggler": 65
+            }
+        },
         {
             OCName: "Manifest Cruelty",
             Positions: {
@@ -229,6 +239,17 @@
                 "MUSCLE #1": 62,
                 "IMITATOR": 63,
                 "MUSCLE #2": 64
+            }
+        },
+        { // These numbers are just placeholders, replace when more information is known
+            OCName: "Hostile Takeover",
+            Positions: {
+                "Cat Burglar": 55,
+                "Engineer": 55,
+                "Hacker": 55,
+                "Kidnapper": 55,
+                "Muscle": 55,
+                "Negotiator": 55
             }
         },
         {

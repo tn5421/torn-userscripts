@@ -1,15 +1,12 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.0.2
+// @version      1.0.4
 // @description  Color Coding the positions. Number updates and more OCs by Neopolitan
-// @author       NotIbbyz, Neopolitan
+// @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=torn.com
 // @connect      tornprobability.com
-// @grant        GM_info
-// @grant        GM_setValue
-// @grant        GM_getValue
 // @grant        GM_xmlhttpRequest
 // @license      MIT
 // @downloadURL https://raw.githubusercontent.com/tn5421/torn-userscripts/refs/heads/main/OC%20Role%20Display%20NSBS%20Edition.user.js
@@ -156,9 +153,9 @@
     const defaultLevel6 = 70;
     const defaultLevel5 = 70;
     const defaultLevel4 = 70;
-    const defaultLevel3 = 71;
-    const defaultLevel2 = 71;
-    const defaultLevel1 = 71;
+    const defaultLevel3 = 70;
+    const defaultLevel2 = 70;
+    const defaultLevel1 = 70;
     const defaultDecline = 700;
 
     const ocRoles = [
@@ -225,10 +222,10 @@
         {
             OCName: "Manifest Cruelty",
             Positions: {
-                "Hacker": 58,
-                "Interrogator": 60,
-                "Reviver": 62,
-                "Cat Burglar": 57
+                "Hacker": 67,
+                "Interrogator": 67,
+                "Reviver": 66,
+                "Cat Burglar": 67
             }
         },
         {
@@ -255,22 +252,22 @@
         {
             OCName: "Gone Fission",
             Positions: {
-                "Hijacker": 61,
-                "Engineer": 57,
-                "Pickpocket": 58,
-                "Imitator": 61,
-                "Bomber": 59
+                "Hijacker": 67,
+                "Engineer": 66,
+                "Pickpocket": 66,
+                "Imitator": 67,
+                "Bomber": 66
             }
         },
         {
             OCName: "Crane Reaction",
             Positions: {
-                "Sniper": 58,
-                "Lookout": 52,
-                "Engineer": 50,
-                "Bomber": 52,
-                "Muscle #1": 51,
-                "Muscle #2": 50
+                "Sniper": 65,
+                "Lookout": 64,
+                "Engineer": 62,
+                "Bomber": 64,
+                "Muscle #1": 62,
+                "Muscle #2": 62
             }
         },
         {

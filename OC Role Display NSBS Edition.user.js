@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.0
+// @version      1.1.1
 // @description  Color Coding the positions. Number updates and more OCs by Neopolitan
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -366,11 +366,11 @@
         { // These numbers are just placeholders, replace when more information is known
             OCName: "Lock Stock", // Level 8 -> Hostile Takeover
             Positions: { // Unknown success rate, hopefully at least 65% though
-                "Hacker": 66,
-                "Assassin": 66,
-                "Muscle #1": 66,
-                "Muscle #2": 66,
-                "Smuggler": 66
+                "Assassin": 68,
+                "Smuggler": 70,
+                "Hacker": 71,
+                "Muscle #1": 70,
+                "Muscle #2": 70
             }
         },
         {

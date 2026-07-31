@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.0.4
+// @version      1.1.0
 // @description  Color Coding the positions. Number updates and more OCs by Neopolitan
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -11,7 +11,7 @@
 // @license      MIT
 // @downloadURL https://raw.githubusercontent.com/tn5421/torn-userscripts/refs/heads/main/OC%20Role%20Display%20NSBS%20Edition.user.js
 // @updateURL https://raw.githubusercontent.com/tn5421/torn-userscripts/refs/heads/main/OC%20Role%20Display%20NSBS%20Edition.user.js
-// ==/UserScript== 
+// ==/UserScript==
 
 (async function() {
     'use strict';
@@ -150,9 +150,6 @@
         panels.forEach(processScenario);
     }
 
-    const defaultLevel6 = 70;
-    const defaultLevel5 = 70;
-    const defaultLevel4 = 70;
     const defaultLevel3 = 70;
     const defaultLevel2 = 70;
     const defaultLevel1 = 70;
@@ -160,58 +157,215 @@
 
     const ocRoles = [
         {
-            OCName: "Window of Opportunity",
-            Positions: {
+            OCName: "Mob Mentality", // Level 1
+            Positions: { // 76.04% success rate
+                "Looter #1": 68,
+                "Looter #2": 68,
+                "Looter #3": 68,
+                "Looter #4": 68
+            }
+        },
+        {
+            OCName: "Thou Shalt Not Steal", // Level 2
+            Positions: { // 75.33% success rate
+                "Picklock": 71,
+                "Pickpocket": 71,
+                "Thief": 65
+            }
+        },
+        {
+            OCName: "Cash Me if You Can", // Level 2
+            Positions: { // 75.15% success rate
+                "Thief #1": 70,
+                "Lookout": 68,
+                "Thief #2": 68
+            }
+        },
+        {
+            OCName: "Smoke and Wing Mirrors", // Level 3
+            Positions: { // 75.19% success rate
+                "Car Thief": 72,
+                "Imitator": 71,
+                "Hustler #2": 66,
+                "Hustler #1": 64
+            }
+        },
+        {
+            OCName: "Gaslight the Way", // Level 3
+            Positions: { // 75.13% success rate
+                "Imitator #3": 72,
+                "Imitator #2": 71,
+                "Looter #3": 68,
+                "Imitator #1": 64,
+                "Looter #1": 66,
+                "Looter #2": 30
+            }
+        },
+        {
+            OCName: "Market Forces", // Level 3
+            Positions: { // 75.00% success rate
+                "Enforcer": 71,
+                "Negotiator": 70,
+                "Muscle": 69,
+                "Lookout": 65,
+                "Arsonist": 55
+            }
+        },
+        {
+            OCName: "Stage Fright", // Level 4
+            Positions: { // 75.16% success rate
+                "Sniper": 75,
+                "Muscle #1": 72,
+                "Enforcer": 72,
+                "Muscle #3": 62,
+                "Lookout": 60,
+                "Muscle #2": 50
+            }
+        },
+        {
+            OCName: "Snow Blind", // Level 4
+            Positions: { // 75.05% success rate
+                "Hustler": 71,
+                "Imitator": 71,
+                "Muscle #1": 64,
+                "Muscle #2": 64
+            }
+        },
+        {
+            OCName: "Plucking the Lotus Petal", // Level 4
+            Positions: { // 75.36% success rate
+                "Muscle": 73,
+                "Robber #2": 71,
+                "Hustler": 65,
+                "Robber #1": 65
+            }
+        },
+        {
+            OCName: "Honey Trap", // Level 5 (Formerly Level 6)
+            Positions: { // 75.15% success rate
+                "Muscle #2": 72,
+                "Muscle #1": 69,
+                "Enforcer": 67
+            }
+        },
+        {
+            OCName: "Guardian Ángels", // Level 5
+            Positions: { // 75.44% success rate
+                "Hustler": 70,
+                "Engineer": 68,
+                "Enforcer": 67
+            }
+        },
+        {
+            OCName: "Counter Offer", // Level 5
+            Positions: { // 75.07% success rate
+                "Robber": 72,
                 "Engineer": 70,
-                "Muscle #1": 74,
-                "Muscle #2": 71,
+                "Picklock": 68,
+                "Hacker": 64,
+                "Looter": 60
+            }
+        },
+        {
+            OCName: "No Reserve", // Level 5 -> Bidding War
+            Positions: { // 75.18% success chance
+                "Techie": 71,
+                "Engineer": 70,
+                "Car Thief": 70
+            }
+        },
+        {
+            OCName: "Leave No Trace", // Level 6
+            Positions: { // 75.19% success rate
+                "Imitator": 70,
+                "Negotiator": 70,
+                "Techie": 64
+            }
+        },
+        {
+            OCName: "Bidding War", // Level 6
+            Positions: { // 75.20% success rate
+                // (No Reserve success rate) x (Bidding War success rate) = overall success rate
+                "Robber #3": 72,
+                "Robber #2": 71,
+                "Bomber #2": 70,
+                "Driver": 66,
+                "Bomber #1": 65,
+                "Robber #1": 65
+            }
+        },
+        {
+            OCName: "Sneaky Git Grab", // Level 6
+            Positions: { // 75.06% success rate
+                "Pickpocket": 73,
+                "Imitator": 69,
+                "Techie": 68,
+                "Hacker": 67
+            }
+        },
+        {
+            OCName: "Dish It Out", // Level 6
+            Positions: { // 75.21% success rate
+                "Assassin": 72,
+                "Muscle": 71,
+                "Saboteur #1": 68,
+                "Engineer": 68,
+                "Saboteur #2": 64
+            }
+        },
+        {
+            OCName: "Window of Opportunity", // Level 7
+            Positions: { // 77.89% success rate
+                "Looter #2": 72,
+                "Muscle #1": 72,
                 "Looter #1": 72,
-                "Looter #2": 75 
-                }
-        },
-        {
-            OCName: "Blast From The Past",
-            Positions: {
-                "PICKLOCK #1": 70,
-                "HACKER": 70,
-                "ENGINEER": 73,
-                "BOMBER": 70,
-                "MUSCLE": 74,
-                "PICKLOCK #2": 60
+                "Muscle #2": 71,
+                "Engineer": 71
             }
         },
         {
-            OCName: "Clinical Precision",
-            Positions: {
-                "ASSASSIN": 63,
-                "CAT BURGLAR": 66,
-                "CLEANER": 67,
-                "IMITATOR": 70
+            OCName: "Blast From The Past", // Level 7
+            Positions: { // 75.02% success rate
+                "Muscle": 74,
+                "Engineer": 73,
+                "Bomber": 70,
+                "Picklock #1": 70,
+                "Hacker": 70,
+                "Picklock #2": 63
             }
         },
         {
-            OCName: "Break the Bank",
-            Positions: {
-                "ROBBER": 62,
-                "MUSCLE #1": 62,
-                "THIEF #1": 58,
-                "MUSCLE #2": 60,
-                "MUSCLE #3": 65,
-                "THIEF #2": 64
+            OCName: "Clinical Precision", // Level 8
+            Positions: { // 70.29% success rate
+                "Imitator": 69,
+                "Cleaner": 67,
+                "Cat Burglar": 67,
+                "Assassin": 65
             }
         },
         {
-            OCName: "Stacking the Deck",
-            Positions: {
-                "HACKER": 63,
-                "IMITATOR": 66,
-                "CAT BURGLAR": 63,
-                "DRIVER": 50
+            OCName: "Break the Bank", // Level 8
+            Positions: { // 68.36% success rate
+                "Muscle #3": 66,
+                "Thief #2": 65,
+                "Muscle #1": 63,
+                "Robber": 63,
+                "Muscle #2": 62,
+                "Thief #1": 60
+            }
+        },
+        {
+            OCName: "Stacking the Deck", // Level 8 -> Ace in the Hole
+            Positions: { // 70.14% success rate
+                "Imitator": 69,
+                "Hacker": 65,
+                "Cat Burglar": 65,
+                "Driver": 58
             }
         },
         { // These numbers are just placeholders, replace when more information is known
-            OCName: "Lock Stock",
-            Positions: {
+            OCName: "Lock Stock", // Level 8 -> Hostile Takeover
+            Positions: { // Unknown success rate, hopefully at least 65% though
                 "Hacker": 66,
                 "Assassin": 66,
                 "Muscle #1": 66,
@@ -220,27 +374,28 @@
             }
         },
         {
-            OCName: "Manifest Cruelty",
-            Positions: {
-                "Hacker": 67,
-                "Interrogator": 67,
+            OCName: "Manifest Cruelty", // Level 8 -> Gone Fission -> Crane Reaction
+            Positions: { // 70.33% success rate
                 "Reviver": 66,
+                "Interrogator": 67,
+                "Hacker": 67,
                 "Cat Burglar": 67
             }
         },
         {
-            OCName: "Ace in the Hole",
-            Positions: {
-                "HACKER": 65,
-                "DRIVER": 54,
-                "MUSCLE #1": 62,
-                "IMITATOR": 63,
-                "MUSCLE #2": 64
+            OCName: "Ace in the Hole", // Level 9
+            Positions: { // 62.84% success rate
+                // (Stacking the Deck success rate) x (Ace in the Hole success rate) = overall success rate
+                "Hacker": 65,
+                "Muscle #2": 64, // not positioned correctly on crimeshub
+                "Imitator": 63, // not positioned correctly on crimeshub
+                "Muscle #1": 62,
+                "Driver": 54
             }
         },
         { // These numbers are just placeholders, replace when more information is known
-            OCName: "Hostile Takeover",
-            Positions: {
+            OCName: "Hostile Takeover", // Level 9
+            Positions: { // Unknown success rate, hopefully at least 65% though
                 "Cat Burglar": 61,
                 "Engineer": 61,
                 "Hacker": 61,
@@ -250,97 +405,37 @@
             }
         },
         {
-            OCName: "Gone Fission",
-            Positions: {
+            OCName: "Gone Fission", // Level 9 -> Crane Reaction
+            Positions: { // 67.58% success rate
+                // (Manifest Cruelty success rate) x (Gone Fission success rate) = cumulative success rate
                 "Hijacker": 67,
-                "Engineer": 66,
-                "Pickpocket": 66,
                 "Imitator": 67,
-                "Bomber": 66
+                "Bomber": 66,
+                "Pickpocket": 66,
+                "Engineer": 66
             }
         },
         {
-            OCName: "Crane Reaction",
-            Positions: {
+            OCName: "Crane Reaction", // Level 10
+            Positions: { // 60.02% success rate
+                // (Manifest Cruelty success rate) x 
+                // (Gone Fission success rate) x 
+                // (Crane Reaction success rate) = overall success rate
                 "Sniper": 65,
                 "Lookout": 64,
-                "Engineer": 62,
                 "Bomber": 64,
                 "Muscle #1": 62,
-                "Muscle #2": 62
+                "Muscle #2": 62,
+                "Engineer": 62
             }
         },
-        {
-            OCName: "Bidding War",
-            Positions: `default_${defaultLevel6}`
-        },
-        {
-            OCName: "Honey Trap",
-            Positions: `default_${defaultLevel6}`
-        },
-        {
-            OCName: "Sneaky Git Grab",
-            Positions: `default_${defaultLevel6}`
-        },
-        {
-            OCName: "Dish It Out",
-            Positions: `default_${defaultLevel6}`
-        },
-        {
-            OCName: "Leave No Trace",
-            Positions: `default_${defaultLevel5}`
-        },
-        {
-            OCName: "Guardian Ángels",
-            Positions: `default_${defaultLevel5}`
-        },
-        {
-            OCName: "Counter Offer",
-            Positions: `default_${defaultLevel5}`
-        },
-        {
-            OCName: "No Reserve",
-            Positions: `default_${defaultLevel5}`
-        },
-        {
-            OCName: "Stage Fright",
-            Positions: `default_${defaultLevel4}`
-        },
-        {
-            OCName: "Snow Blind",
-            Positions: `default_${defaultLevel4}`
-        },
-        {
-            OCName: "Plucking the Lotus Petal",
-            Positions: `default_${defaultLevel4}`
-        },
-        {
-            OCName: "Gaslight the Way",
-            Positions: `default_${defaultLevel3}`
-        },
-        {
-            OCName: "Smoke and Wing Mirrors",
-            Positions: `default_${defaultLevel3}`
-        },
-        {
-            OCName: "Market Forces",
-            Positions: `default_${defaultLevel3}`
-        },
+// These OCs do not have enough information available, 
+// And unlike the higher level ones, do not matter much
+// Until more information becomes available, these can
+// stay generic
         {
             OCName: "Best of the Lot",
             Positions: `default_${defaultLevel2}`
-        },
-        {
-            OCName: "Cash Me if You Can",
-            Positions: `default_${defaultLevel2}`
-        },
-        {
-            OCName: "Thou Shalt Not Steal",
-            Positions: `default_${defaultLevel2}`
-        },
-        {
-            OCName: "Mob Mentality",
-            Positions: `default_${defaultLevel1}`
         },
         {
             OCName: "Pet Project",
@@ -351,8 +446,6 @@
             Positions: `default_${defaultLevel1}`
         }
     ];
-
-    const roleMappings = {};
 
     function processScenario(panel) {
         if (!panel.classList.contains('role-processed')) {

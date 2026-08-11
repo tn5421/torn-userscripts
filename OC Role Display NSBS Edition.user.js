@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.1
+// @version      1.1.2
 // @description  Color Coding the positions. Number updates and more OCs by Neopolitan
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -395,13 +395,13 @@
         },
         { // These numbers are just placeholders, replace when more information is known
             OCName: "Hostile Takeover", // Level 9
-            Positions: { // Unknown success rate, hopefully at least 65% though
-                "Cat Burglar": 61,
-                "Engineer": 61,
-                "Hacker": 61,
-                "Kidnapper": 61,
-                "Muscle": 61,
-                "Negotiator": 61
+            Positions: { // 62% roughly
+                "Negotiator": 65,
+                "Engineer": 65,
+                "Cat Burglar": 64,
+                "Muscle": 63,
+                "Kidnapper": 63,
+                "Hacker": 63
             }
         },
         {
@@ -418,8 +418,8 @@
         {
             OCName: "Crane Reaction", // Level 10
             Positions: { // 60.02% success rate
-                // (Manifest Cruelty success rate) x 
-                // (Gone Fission success rate) x 
+                // (Manifest Cruelty success rate) x
+                // (Gone Fission success rate) x
                 // (Crane Reaction success rate) = overall success rate
                 "Sniper": 65,
                 "Lookout": 64,
@@ -429,7 +429,7 @@
                 "Engineer": 62
             }
         },
-// These OCs do not have enough information available, 
+// These OCs do not have enough information available,
 // And unlike the higher level ones, do not matter much
 // Until more information becomes available, these can
 // stay generic

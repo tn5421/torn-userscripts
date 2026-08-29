@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.2
+// @version      1.1.3
 // @description  Color Coding the positions. Number updates and more OCs by Neopolitan
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -334,6 +334,18 @@
                 "Picklock #2": 63
             }
         },
+        {
+            OCName: "Cleared for Takeoff", // Level 7
+            Positions: { // hopefully 75% success rate
+                "Assassin": 75,
+                "Imitator": 75,
+                "Interrogator": 75,
+                "Lookout": 75,
+                "Pickpocket": 75,
+                "Techie": 75
+            }
+        },
+        
         {
             OCName: "Clinical Precision", // Level 8
             Positions: { // 70.29% success rate

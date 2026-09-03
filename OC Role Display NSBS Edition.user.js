@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.3
+// @version      1.1.4
 // @description  Color Coding the positions. Number updates and more OCs by Neopolitan
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -368,11 +368,11 @@
         },
         {
             OCName: "Stacking the Deck", // Level 8 -> Ace in the Hole
-            Positions: { // 70.14% success rate
-                "Imitator": 69,
-                "Hacker": 65,
-                "Cat Burglar": 65,
-                "Driver": 58
+            Positions: { // 85.10% success rate, 64.84% chain success rate
+                "Imitator": 77,
+                "Hacker": 76,
+                "Cat Burglar": 76,
+                "Driver": 62
             }
         },
         { // These numbers are just placeholders, replace when more information is known
@@ -387,22 +387,22 @@
         },
         {
             OCName: "Manifest Cruelty", // Level 8 -> Gone Fission -> Crane Reaction
-            Positions: { // 70.33% success rate
-                "Reviver": 66,
-                "Interrogator": 67,
-                "Hacker": 67,
-                "Cat Burglar": 67
+            Positions: { // 84.48% success rate, 50.09% chain success rate
+                "Reviver": 76,
+                "Interrogator": 75,
+                "Hacker": 75,
+                "Cat Burglar": 75
             }
         },
         {
             OCName: "Ace in the Hole", // Level 9
-            Positions: { // 62.84% success rate
+            Positions: { // 76.19% success rate, 64.84% chain success rate
                 // (Stacking the Deck success rate) x (Ace in the Hole success rate) = overall success rate
-                "Hacker": 65,
-                "Muscle #2": 64, // not positioned correctly on crimeshub
-                "Imitator": 63, // not positioned correctly on crimeshub
-                "Muscle #1": 62,
-                "Driver": 54
+                "Hacker": 71,
+                "Muscle #2": 71, // not positioned correctly on crimeshub
+                "Imitator": 71, // not positioned correctly on crimeshub
+                "Muscle #1": 71,
+                "Driver": 58
             }
         },
         { // These numbers are just placeholders, replace when more information is known
@@ -418,27 +418,27 @@
         },
         {
             OCName: "Gone Fission", // Level 9 -> Crane Reaction
-            Positions: { // 67.58% success rate
+            Positions: { // 78.55% success rate, 66.36% cumulative success rate, 50.09% chain success rate
                 // (Manifest Cruelty success rate) x (Gone Fission success rate) = cumulative success rate
-                "Hijacker": 67,
-                "Imitator": 67,
-                "Bomber": 66,
-                "Pickpocket": 66,
-                "Engineer": 66
+                "Hijacker": 73,
+                "Imitator": 73,
+                "Bomber": 72,
+                "Pickpocket": 72,
+                "Engineer": 72
             }
         },
         {
             OCName: "Crane Reaction", // Level 10
-            Positions: { // 60.02% success rate
+            Positions: { // 75.49% success, 50.09% chain success rate
                 // (Manifest Cruelty success rate) x
                 // (Gone Fission success rate) x
                 // (Crane Reaction success rate) = overall success rate
-                "Sniper": 65,
-                "Lookout": 64,
-                "Bomber": 64,
-                "Muscle #1": 62,
-                "Muscle #2": 62,
-                "Engineer": 62
+                "Sniper": 72,
+                "Lookout": 71,
+                "Bomber": 71,
+                "Muscle #1": 71,
+                "Muscle #2": 71,
+                "Engineer": 71
             }
         },
 // These OCs do not have enough information available,

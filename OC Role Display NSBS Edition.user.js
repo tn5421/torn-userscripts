@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.4
-// @description  Color Coding the positions. Number updates and more OCs by Neopolitan
+// @version      1.1.5
+// @description  Displays OC role contribution weights and shows if you would be a good fit in a particular OC
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=torn.com
 // @connect      tornprobability.com
 // @grant        GM_xmlhttpRequest
 // @license      MIT
-// @downloadURL https://raw.githubusercontent.com/tn5421/torn-userscripts/refs/heads/main/OC%20Role%20Display%20NSBS%20Edition.user.js
-// @updateURL https://raw.githubusercontent.com/tn5421/torn-userscripts/refs/heads/main/OC%20Role%20Display%20NSBS%20Edition.user.js
+// @downloadURL  https://raw.githubusercontent.com/tn5421/torn-userscripts/refs/heads/main/OC%20Role%20Display%20NSBS%20Edition.user.js
+// @updateURL    https://raw.githubusercontent.com/tn5421/torn-userscripts/refs/heads/main/OC%20Role%20Display%20NSBS%20Edition.user.js
 // ==/UserScript==
 
 (async function() {
@@ -150,9 +150,7 @@
         panels.forEach(processScenario);
     }
 
-    const defaultLevel3 = 70;
-    const defaultLevel2 = 70;
-    const defaultLevel1 = 70;
+    const defaultLevel = 70;
     const defaultDecline = 700;
 
     const ocRoles = [
@@ -268,7 +266,7 @@
         },
         {
             OCName: "No Reserve", // Level 5 -> Bidding War
-            Positions: { // 75.18% success chance
+            Positions: { // 75.18% success rate
                 "Techie": 71,
                 "Engineer": 70,
                 "Car Thief": 70
@@ -345,7 +343,7 @@
                 "Techie": 75
             }
         },
-        
+
         {
             OCName: "Clinical Precision", // Level 8
             Positions: { // 70.29% success rate
@@ -377,7 +375,7 @@
         },
         { // These numbers are just placeholders, replace when more information is known
             OCName: "Lock Stock", // Level 8 -> Hostile Takeover
-            Positions: { // Unknown success rate, hopefully at least 65% though
+            Positions: { // 65% success rate (guess)
                 "Assassin": 68,
                 "Smuggler": 70,
                 "Hacker": 71,
@@ -407,7 +405,7 @@
         },
         { // These numbers are just placeholders, replace when more information is known
             OCName: "Hostile Takeover", // Level 9
-            Positions: { // 62% roughly
+            Positions: { // 62% success rate (guess)
                 "Negotiator": 65,
                 "Engineer": 65,
                 "Cat Burglar": 64,
@@ -429,7 +427,7 @@
         },
         {
             OCName: "Crane Reaction", // Level 10
-            Positions: { // 75.49% success, 50.09% chain success rate
+            Positions: { // 75.49% success rate, 50.09% chain success rate
                 // (Manifest Cruelty success rate) x
                 // (Gone Fission success rate) x
                 // (Crane Reaction success rate) = overall success rate
@@ -441,21 +439,20 @@
                 "Engineer": 71
             }
         },
-// These OCs do not have enough information available,
-// And unlike the higher level ones, do not matter much
-// Until more information becomes available, these can
-// stay generic
+        // These low level OCs do not have enough information to
+        // define role-specific requirements. Keeping requirements
+        // generic until Crimehub publishes information on them
         {
-            OCName: "Best of the Lot",
-            Positions: `default_${defaultLevel2}`
+            OCName: "Best of the Lot", //level 2
+            Positions: `default_${defaultLevel}`
         },
         {
-            OCName: "Pet Project",
-            Positions: `default_${defaultLevel1}`
+            OCName: "Pet Project", // level 1
+            Positions: `default_${defaultLevel}`
         },
         {
-            OCName: "First Aid and Abet",
-            Positions: `default_${defaultLevel1}`
+            OCName: "First Aid and Abet", // level 1
+            Positions: `default_${defaultLevel}`
         }
     ];
 

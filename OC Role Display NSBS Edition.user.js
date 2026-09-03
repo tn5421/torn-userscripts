@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.5
+// @version      1.1.6
 // @description  Displays OC role contribution weights and shows if you would be a good fit in a particular OC
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -266,10 +266,10 @@
         },
         {
             OCName: "No Reserve", // Level 5 -> Bidding War
-            Positions: { // 75.18% success rate
-                "Techie": 71,
-                "Engineer": 70,
-                "Car Thief": 70
+            Positions: { // 75.18% success rate, 65.32% chain success rate
+                "Techie": 77,
+                "Engineer": 77,
+                "Car Thief": 77
             }
         },
         {
@@ -282,12 +282,12 @@
         },
         {
             OCName: "Bidding War", // Level 6
-            Positions: { // 75.20% success rate
+            Positions: { // 75.74% success rate, 65.32% chain success rate
                 // (No Reserve success rate) x (Bidding War success rate) = overall success rate
                 "Robber #3": 72,
-                "Robber #2": 71,
-                "Bomber #2": 70,
-                "Driver": 66,
+                "Robber #2": 72,
+                "Bomber #2": 72,
+                "Driver": 65,
                 "Bomber #1": 65,
                 "Robber #1": 65
             }

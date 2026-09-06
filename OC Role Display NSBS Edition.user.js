@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.6
+// @version      1.1.7
 // @description  Displays OC role contribution weights and shows if you would be a good fit in a particular OC
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -266,10 +266,10 @@
         },
         {
             OCName: "No Reserve", // Level 5 -> Bidding War
-            Positions: { // 75.18% success rate, 65.32% chain success rate
-                "Techie": 77,
-                "Engineer": 77,
-                "Car Thief": 77
+            Positions: { // 83.24% success rate, 60.22% chain success rate
+                "Techie": 75,
+                "Engineer": 75,
+                "Car Thief": 75
             }
         },
         {
@@ -282,11 +282,11 @@
         },
         {
             OCName: "Bidding War", // Level 6
-            Positions: { // 75.74% success rate, 65.32% chain success rate
+            Positions: { // 72.35% success rate, 60.22% chain success rate
                 // (No Reserve success rate) x (Bidding War success rate) = overall success rate
-                "Robber #3": 72,
-                "Robber #2": 72,
-                "Bomber #2": 72,
+                "Robber #3": 69,
+                "Robber #2": 69,
+                "Bomber #2": 69,
                 "Driver": 65,
                 "Bomber #1": 65,
                 "Robber #1": 65
@@ -366,11 +366,11 @@
         },
         {
             OCName: "Stacking the Deck", // Level 8 -> Ace in the Hole
-            Positions: { // 85.10% success rate, 64.84% chain success rate
-                "Imitator": 77,
-                "Hacker": 76,
-                "Cat Burglar": 76,
-                "Driver": 62
+            Positions: { // 78.75% success rate, 50.12% chain success rate
+                "Imitator": 72,
+                "Hacker": 72,
+                "Cat Burglar": 72,
+                "Driver": 60
             }
         },
         { // These numbers are just placeholders, replace when more information is known
@@ -394,13 +394,13 @@
         },
         {
             OCName: "Ace in the Hole", // Level 9
-            Positions: { // 76.19% success rate, 64.84% chain success rate
+            Positions: { // 63.64% success rate, 50.12% chain success rate
                 // (Stacking the Deck success rate) x (Ace in the Hole success rate) = overall success rate
-                "Hacker": 71,
-                "Muscle #2": 71, // not positioned correctly on crimeshub
-                "Imitator": 71, // not positioned correctly on crimeshub
-                "Muscle #1": 71,
-                "Driver": 58
+                "Hacker": 64,
+                "Muscle #2": 65, // not positioned correctly on crimeshub
+                "Imitator": 63, // not positioned correctly on crimeshub
+                "Muscle #1": 65,
+                "Driver": 54
             }
         },
         { // These numbers are just placeholders, replace when more information is known

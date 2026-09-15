@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.7
+// @version      1.1.8
 // @description  Displays OC role contribution weights and shows if you would be a good fit in a particular OC
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -334,13 +334,13 @@
         },
         {
             OCName: "Cleared for Takeoff", // Level 7
-            Positions: { // hopefully 75% success rate
-                "Assassin": 75,
-                "Imitator": 75,
-                "Interrogator": 75,
-                "Lookout": 75,
-                "Pickpocket": 75,
-                "Techie": 75
+            Positions: { // ChatGPT estimates ~80.60% success rate
+                "Interrogator": 71,
+                "Imitator": 71,
+                "Assassin": 71,
+                "Pickpocket": 70,
+                "Techie": 70,
+                "Lookout": 70
             }
         },
 

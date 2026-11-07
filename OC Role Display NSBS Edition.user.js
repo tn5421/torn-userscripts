@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.8
+// @version      1.1.9
 // @description  Displays OC role contribution weights and shows if you would be a good fit in a particular OC
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -334,33 +334,33 @@
         },
         {
             OCName: "Cleared for Takeoff", // Level 7
-            Positions: { // ChatGPT estimates ~80.60% success rate
-                "Interrogator": 71,
-                "Imitator": 71,
-                "Assassin": 71,
-                "Pickpocket": 70,
-                "Techie": 70,
-                "Lookout": 70
+            Positions: { // 75.42% success rate
+                "Interrogator": 70,
+                "Imitator": 70,
+                "Assassin": 70,
+                "Pickpocket": 68,
+                "Techie": 68,
+                "Lookout": 68
             }
         },
 
         {
             OCName: "Clinical Precision", // Level 8
-            Positions: { // 70.29% success rate
-                "Imitator": 69,
-                "Cleaner": 67,
-                "Cat Burglar": 67,
-                "Assassin": 65
+            Positions: { // 75.11% success rate
+                "Imitator": 71,
+                "Cleaner": 71,
+                "Cat Burglar": 71,
+                "Assassin": 66
             }
         },
         {
             OCName: "Break the Bank", // Level 8
-            Positions: { // 68.36% success rate
-                "Muscle #3": 66,
-                "Thief #2": 65,
-                "Muscle #1": 63,
-                "Robber": 63,
-                "Muscle #2": 62,
+            Positions: { // 70.43%% success rate
+                "Muscle #3": 67,
+                "Thief #2": 66,
+                "Muscle #1": 65,
+                "Robber": 65,
+                "Muscle #2": 63,
                 "Thief #1": 60
             }
         },
@@ -375,12 +375,12 @@
         },
         { // These numbers are just placeholders, replace when more information is known
             OCName: "Lock Stock", // Level 8 -> Hostile Takeover
-            Positions: { // 65% success rate (guess)
-                "Assassin": 68,
-                "Smuggler": 70,
-                "Hacker": 71,
-                "Muscle #1": 70,
-                "Muscle #2": 70
+            Positions: { // 76.50% success rate, 50.14% chain success rate
+                "Assassin": 69,
+                "Smuggler": 72,
+                "Hacker": 73,
+                "Muscle #1": 73,
+                "Muscle #2": 73
             }
         },
         {
@@ -405,13 +405,13 @@
         },
         { // These numbers are just placeholders, replace when more information is known
             OCName: "Hostile Takeover", // Level 9
-            Positions: { // 62% success rate (guess)
-                "Negotiator": 65,
-                "Engineer": 65,
+            Positions: { // 65.54% success rate, 50.14% chain success rate
+                "Negotiator": 66,
+                "Engineer": 64,
                 "Cat Burglar": 64,
-                "Muscle": 63,
-                "Kidnapper": 63,
-                "Hacker": 63
+                "Muscle": 66,
+                "Kidnapper": 64,
+                "Hacker": 66
             }
         },
         {

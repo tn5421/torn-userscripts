@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.9
+// @version      1.1.10
 // @description  Displays OC role contribution weights and shows if you would be a good fit in a particular OC
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -366,21 +366,21 @@
         },
         {
             OCName: "Stacking the Deck", // Level 8 -> Ace in the Hole
-            Positions: { // 78.75% success rate, 50.12% chain success rate
-                "Imitator": 72,
-                "Hacker": 72,
-                "Cat Burglar": 72,
-                "Driver": 60
+            Positions: { // 82.70% success rate, xx.xx% chain success rate
+                "Imitator": 76,
+                "Hacker": 74,
+                "Cat Burglar": 73,
+                "Driver": 64
             }
         },
         { // These numbers are just placeholders, replace when more information is known
             OCName: "Lock Stock", // Level 8 -> Hostile Takeover
-            Positions: { // 76.50% success rate, 50.14% chain success rate
-                "Assassin": 69,
-                "Smuggler": 72,
-                "Hacker": 73,
-                "Muscle #1": 73,
-                "Muscle #2": 73
+            Positions: { // 80.02% success rate, xx.xx% chain success rate
+                "Assassin": 72,
+                "Smuggler": 73,
+                "Hacker": 74,
+                "Muscle #1": 74,
+                "Muscle #2": 74
             }
         },
         {

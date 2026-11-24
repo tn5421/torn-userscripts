@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.10
+// @version      1.1.11
 // @description  Displays OC role contribution weights and shows if you would be a good fit in a particular OC
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -354,8 +354,18 @@
             }
         },
         {
+            OCName: "Ship Happens", // Level 8
+            Positions: { // ~72-73% estimated success rate
+                "Interrogator": 68,
+                "Spy": 68,
+                "Hustler": 68,
+                "Engineer": 65,
+                "Assassin": 64
+            }
+        },
+        {
             OCName: "Break the Bank", // Level 8
-            Positions: { // 70.43%% success rate
+            Positions: { // 70.43% success rate
                 "Muscle #3": 67,
                 "Thief #2": 66,
                 "Muscle #1": 65,

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.11
+// @version      1.1.12
 // @description  Displays OC role contribution weights and shows if you would be a good fit in a particular OC
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
@@ -63,8 +63,47 @@
     `;
     document.head.appendChild(style);
 
-    const API_URL = "https://tornprobability.com:3000/api/GetRoleWeights";
+const API_URL = "https://tornprobability.com:3000/api/GetRoleWeights";
     let roleWeightsAPI = null;
+
+    // Fallback snapshot from AllenOne GetRoleWeights, 2026-11-24.
+    // Live values take priority for each crime/role when available.
+    const roleContributions = {
+        "MobMentality": {"Looter1": 33.96650646, "Looter2": 26.48850715, "Looter3": 18.36444021, "Looter4": 21.18054618},
+        "PetProject": {"Kidnapper": 30.92676727, "Muscle": 32.62884615, "Picklock": 36.44438658},
+        "FirstAidAndAbet": {"Picklock": 26.040303247907904, "Decoy": 30.73072727408889, "Pickpocket": 43.228969478003215},
+        "CashMeIfYouCan": {"Thief1": 54.18134868, "Thief2": 28.04221236, "Lookout": 17.77643896},
+        "BestOfTheLot": {"Picklock": 20.73368395, "CarThief": 19.5328795, "Muscle": 43.67657367, "Imitator": 16.05686289},
+        "MarketForces": {"Enforcer": 29.4020952, "Negotiator": 27.22899702, "Lookout": 16.36647471, "Arsonist": 4.456390991, "Muscle": 22.54604208},
+        "SmokeAndWingMirrors": {"CarThief": 50.89511253, "Imitator": 27.10752487, "Hustler1": 9.000400474, "Hustler2": 12.99696212},
+        "GaslightTheWay": {"Imitator1": 9.394999578, "Imitator2": 27.46467248, "Imitator3": 41.32194207, "Looter1": 9.394999578, "Looter2": -0.0003562738035, "Looter3": 12.42374256},
+        "StageFright": {"Enforcer": 15.67090339, "Muscle1": 20.01365691, "Muscle2": 2.659259022, "Muscle3": 9.165081208, "Lookout": 6.188888612, "Sniper": 46.30221086},
+        "SnowBlind": {"Hustler": 48.40533937, "Imitator": 34.56895649, "Muscle1": 8.512932288, "Muscle2": 8.512771845},
+        "PluckingTheLotusPetal": {"Robber1": 14.027682053942709, "Hustler": 14.394494084394903, "Robber2": 23.680942608167083, "Muscle": 47.89688125349531},
+        "LeaveNoTrace": {"Techie": 29.01099583, "Negotiator": 34.1307307, "Imitator": 36.85827347},
+        "NoReserve": {"CarThief": 30.50667524, "Techie": 38.37053402, "Engineer": 31.12279075},
+        "CounterOffer": {"Robber": 35.94505104, "Looter": 6.998750427, "Hacker": 12.1275068, "Picklock": 16.5353262, "Engineer": 28.39336554},
+        "GuardianÁngels": {"Enforcer": 27.404376861170505, "Hustler": 42.10252351813381, "Engineer": 30.49309962016114},
+        "HoneyTrap": {"Enforcer": 26.98428598, "Muscle1": 30.86556191, "Muscle2": 42.15015211},
+        "BiddingWar": {"Robber1": 7.100963041, "Driver": 12.5356157, "Robber2": 22.87302433, "Robber3": 31.67051915, "Bomber1": 7.846987259, "Bomber2": 17.97289051},
+        "SneakyGitGrab": {"Imitator": 17.539756110007634, "Pickpocket": 50.831934101247086, "Hacker": 14.481791981545502, "Techie": 17.146517807199775},
+        "BlastFromThePast": {"Picklock1": 10.84876785, "Hacker": 12.05662038, "Engineer": 24.0155975, "Bomber": 15.61710346, "Muscle": 34.58815764, "Picklock2": 2.873753178},
+        "BreakTheBank": {"Robber": 12.69693448, "Muscle1": 13.51973049, "Muscle2": 10.10353513, "Thief1": 2.930695727, "Muscle3": 31.65263066, "Thief2": 29.09647352},
+        "StackingTheDeck": {"CatBurglar": 23.43294188, "Driver": 2.956670602, "Hacker": 25.43825688, "Imitator": 48.17213064},
+        "ClinicalPrecision": {"Imitator": 43.31533431, "CatBurglar": 18.93905648, "Assassin": 16.0581518, "Cleaner": 21.68745741},
+        "ManifestCruelty": {"Hacker": 16.32001273063874, "Interrogator": 23.492099324887565, "Reviver": 46.27406770738405, "CatBurglar": 13.913820237089643},
+        "LockStock": {"Assassin": 40.26601835937421, "Smuggler": 17.442378565297464, "Hacker": 18.407618259403492, "Muscle1": 11.941992407962427, "Muscle2": 11.941992407962427},
+        "AceInTheHole": {"Imitator": 21.07540412, "Muscle1": 18.29831955, "Muscle2": 24.65084339, "Hacker": 28.3434151, "Driver": 7.632017841},
+        "GoneFission": {"Hijacker": 24.93974876222353, "Engineer": 15.565232594311826, "Pickpocket": 16.53377808965346, "Imitator": 24.93974876222354, "Bomber": 18.021491791587643},
+        "HostileTakeover": {"Hacker": 11.154471089082223, "Engineer": 15.240409558114203, "CatBurglar": 16.003004887681396, "Kidnapper": 12.980809844427426, "Negotiator": 23.952564641966315, "Muscle": 20.668739978728432},
+        "ClearedforTakeoff": {"Imitator": 24.939007667714826, "Techie": 11.316435057348194, "Pickpocket": 12.032038349844655, "Lookout": 8.372798960106097, "Assassin": 18.15580375759352, "Interrogator": 25.183916207392716},
+        "ShipHappens": {"Engineer": 13.3450564176806, "Interrogator": 31.268710977282005, "Hustler": 19.686770299703376, "Spy": 25.419779346520315, "Assassin": 10.2796829588137},
+        "CraneReaction": {"Sniper": 40.73886856841122, "Lookout": 16.623960934255475, "Engineer": 8.286087919744741, "Bomber": 15.8901690506963, "Muscle1": 10.683294142974866, "Muscle2": 7.777619383917385},
+        "WindowOfOpportunity": {"Engineer": 14.55335487209706, "Looter1": 19.544697437213543, "Looter2": 25.802321762790502, "Muscle1": 23.086816638821606, "Muscle2": 17.012809289077286},
+        "ThouShaltNotSteal": {"Thief": 12.396646686195815, "Pickpocket": 37.856826197979196, "Picklock": 49.74652711582499},
+        "DisorderlyConduct": {"Vandal": 24.80912925856699, "Arsonist": 27.744021103582305, "Muscle": 17.464115251029245, "Looter": 29.982734386821452},
+        "DishItOut": {"Assassin": 37.3380808914086, "Muscle": 25.243817634035594, "Saboteur1": 14.639223669899579, "Saboteur2": 8.911747057590532, "Engineer": 13.867130747065687}
+    };
 
     function classStartsWith(prefix) {
         return `[class^="${prefix}"], [class*=" ${prefix}"]`;
@@ -92,6 +131,14 @@
             .trim()
             .toLowerCase()
             .replace(/[^a-z0-9\u00C0-\u017F]/gi, "");
+    }
+
+    function getRoleWeight(weights, ocKey, roleKey) {
+        if (!weights || typeof weights !== "object" || Array.isArray(weights)) return undefined;
+        const ocEntry = Object.entries(weights).find(([key]) => compactKey(key) === ocKey);
+        if (!ocEntry || !ocEntry[1] || typeof ocEntry[1] !== "object" || Array.isArray(ocEntry[1])) return undefined;
+        const value = Object.entries(ocEntry[1]).find(([key]) => compactKey(key) === roleKey)?.[1];
+        return Number.isFinite(value) ? value : undefined;
     }
 
     function getScenarioPanelFromTitle(titleEl) {
@@ -503,36 +550,25 @@
             const successChance = parseInt(chanceElem.textContent.trim(), 10) || 0;
             const joinBtn = slot.querySelector("button[class^='torn-btn joinButton'], button[class*=' torn-btn joinButton']");
 
-            // From allenone API
-            if (roleWeightsAPI) {
-                const ocKeyCompact = compactKey(cleanOCName);
-                const roleKeyCompact = compactKey(rawRole);
+            // Prefer live AllenOne weights; fall back per role to the embedded snapshot.
+            const ocKeyCompact = compactKey(cleanOCName);
+            const roleKeyCompact = compactKey(rawRole);
+            const pctRaw = getRoleWeight(roleWeightsAPI, ocKeyCompact, roleKeyCompact)
+                ?? getRoleWeight(roleContributions, ocKeyCompact, roleKeyCompact);
+            const pct = Number.isFinite(pctRaw) ? Math.round(pctRaw * 100) / 100 : undefined;
 
-                const ocEntry = Object.entries(roleWeightsAPI || {}).find(([k]) =>
-                                                                          String(k).toLowerCase() === ocKeyCompact
-                                                                         );
+            if (typeof pct === "number") {
+                slot.classList.add("oc-has-contrib");
 
-                const pctRaw = ocEntry
-                ? Object.entries(ocEntry[1] || {}).find(([k]) =>
-                                                        String(k).toLowerCase() === roleKeyCompact
-                                                       )?.[1]
-                : undefined;
+                const wrap = document.createElement("div");
+                wrap.className = "oc-contrib-linewrap";
 
-                const pct = (typeof pctRaw === "number") ? Math.round(pctRaw) : undefined;
+                const text = document.createElement("span");
+                text.className = "oc-contrib-linetext";
+                text.textContent = `${pct}%`;
 
-                if (typeof pct === "number") {
-                    slot.classList.add("oc-has-contrib");
-
-                    const wrap = document.createElement("div");
-                    wrap.className = "oc-contrib-linewrap";
-
-                    const text = document.createElement("span");
-                    text.className = "oc-contrib-linetext";
-                    text.textContent = `${pct}%`;
-
-                    wrap.appendChild(text);
-                    slot.appendChild(wrap);
-                }
+                wrap.appendChild(text);
+                slot.appendChild(wrap);
             }
 
             const ocData = ocRoles.find(o =>
@@ -649,22 +685,32 @@
         processAllScenarios();
     });
 
+    // Display the fallback immediately, even if the live request fails.
+    processAllScenarios();
+
     GM_xmlhttpRequest({
         method: "GET",
         url: API_URL,
         onload: (res) => {
             try {
-                roleWeightsAPI = JSON.parse(res.responseText);
+                if (res.status < 200 || res.status >= 300) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                const data = JSON.parse(res.responseText);
+                if (!data || typeof data !== "object" || Array.isArray(data)) {
+                    throw new Error("Invalid role weights response");
+                }
+                roleWeightsAPI = data;
                 console.log("[OC Role Display] Role Weights API loaded");
 
                 processAllScenarios();
 
             } catch (e) {
-                console.warn("[OC Role Display] Failed parsing API JSON ", e);
+                console.warn("[OC Role Display] Invalid API response; using fallback weights", e);
             }
         },
         onerror: (err) => {
-            console.warn("[OC Role Display] API request failed", err);
+            console.warn("[OC Role Display] API request failed; using fallback weights", err);
         }
     });
 

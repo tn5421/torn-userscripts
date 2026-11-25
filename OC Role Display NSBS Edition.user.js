@@ -1,50 +1,93 @@
 // ==UserScript==
 // @name         OC Role Display - NSBS Edition
 // @namespace    com.neopolitan.OcRoleDisplay
-// @version      1.1.12
+// @version      1.2.0
 // @description  Displays OC role contribution weights and shows if you would be a good fit in a particular OC
 // @author       Ibbyz [229585], Neopolitan [276835]
 // @match        https://www.torn.com/factions.php?step=your*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=torn.com
 // @connect      tornprobability.com
 // @grant        GM_xmlhttpRequest
+// @run-at       document-idle
 // @license      MIT
 // @downloadURL  https://raw.githubusercontent.com/tn5421/torn-userscripts/refs/heads/main/OC%20Role%20Display%20NSBS%20Edition.user.js
 // @updateURL    https://raw.githubusercontent.com/tn5421/torn-userscripts/refs/heads/main/OC%20Role%20Display%20NSBS%20Edition.user.js
 // ==/UserScript==
 
-(async function() {
+(function() {
     'use strict';
 
+    const API_URL = "https://tornprobability.com:3000/api/GetRoleWeights";
+    const CACHE_KEY = "oc_role_display_weights_v1";
+    const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+    const API_TIMEOUT_MS = 5000;
+    const API_RETRY_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
+    const ROOT_CHECK_DELAY_MS = 250;
+
+    let weightsCache = null;
+    let memoryCacheOnly = false;
+    let weightsFetchInFlight = false;
+    let retryWeightsAt = 0;
+    let weightsTimer = null;
+
+    let crimesObserver = null;
+    let observedCrimesRoot = null;
+    let rootTimer = null;
+    let panelFrame = null;
+    const pendingPanels = new Set();
+
     const style = document.createElement('style');
-    style.innerHTML = `
-    @keyframes pulseRed {
-        0% { box-shadow: 0 0 8px red; }
+    style.textContent = `
+    @keyframes oc-nsbs-pulse {
+        0%, 100% { box-shadow: 0 0 8px red; }
         50% { box-shadow: 0 0 18px red; }
-        100% { box-shadow: 0 0 8px red; }
     }
 
-    .pulse-border-red {
-        animation: pulseRed 1s infinite;
+    .oc-nsbs-below { background-color: #ff000061 !important; }
+    .oc-nsbs-eligible { background-color: #21a61c61 !important; }
+    .oc-nsbs-low-occupied { outline: 4px solid red; outline-offset: 0; }
+    .oc-nsbs-active .oc-nsbs-low-occupied { animation: oc-nsbs-pulse 1s infinite; }
+
+    /* Match Torn's disabled Join look in light and dark mode without changing its native button state. */
+    button.torn-btn[data-oc-nsbs-blocked]:enabled {
+        cursor: not-allowed !important;
+        opacity: 1 !important;
+        background: linear-gradient(to bottom, #e5e5e5, #ccc) !important;
+        color: #888 !important;
+        border-color: #bbb !important;
+        box-shadow: none !important;
+        text-shadow: none !important;
     }
 
-.oc-has-contrib {
-    position: relative !important;
-    padding-bottom: 22px !important;
-    overflow: visible !important;
-}
+    body.dark-mode button.torn-btn[data-oc-nsbs-blocked]:enabled {
+        background: linear-gradient(to bottom, #000, #313131) !important;
+        color: #555 !important;
+        border-color: transparent !important;
+    }
 
-.oc-contrib-linewrap {
-    position: absolute !important;
-    left: 8px !important;
-    right: 8px !important;
-    bottom: 2px !important;
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    pointer-events: none !important;
-    z-index: 1 !important;
-}
+    button.torn-btn[data-oc-nsbs-blocked]:enabled span {
+        color: inherit !important;
+        text-shadow: none !important;
+    }
+
+    .oc-has-contrib {
+        position: relative !important;
+        padding-bottom: 22px !important;
+        overflow: visible !important;
+    }
+
+    .oc-contrib-linewrap {
+        position: absolute !important;
+        left: 8px !important;
+        right: 8px !important;
+        bottom: 2px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        pointer-events: none !important;
+        z-index: 1 !important;
+    }
+
     .oc-contrib-linewrap::before,
     .oc-contrib-linewrap::after {
         content: "";
@@ -61,13 +104,9 @@
         padding: 0 2px;
     }
     `;
-    document.head.appendChild(style);
-
-const API_URL = "https://tornprobability.com:3000/api/GetRoleWeights";
-    let roleWeightsAPI = null;
 
     // Fallback snapshot from AllenOne GetRoleWeights, 2026-11-24.
-    // Live values take priority for each crime/role when available.
+    // Live/cached values take priority for each crime/role when available.
     const roleContributions = {
         "MobMentality": {"Looter1": 33.96650646, "Looter2": 26.48850715, "Looter3": 18.36444021, "Looter4": 21.18054618},
         "PetProject": {"Kidnapper": 30.92676727, "Muscle": 32.62884615, "Picklock": 36.44438658},
@@ -83,7 +122,7 @@ const API_URL = "https://tornprobability.com:3000/api/GetRoleWeights";
         "LeaveNoTrace": {"Techie": 29.01099583, "Negotiator": 34.1307307, "Imitator": 36.85827347},
         "NoReserve": {"CarThief": 30.50667524, "Techie": 38.37053402, "Engineer": 31.12279075},
         "CounterOffer": {"Robber": 35.94505104, "Looter": 6.998750427, "Hacker": 12.1275068, "Picklock": 16.5353262, "Engineer": 28.39336554},
-        "GuardianÁngels": {"Enforcer": 27.404376861170505, "Hustler": 42.10252351813381, "Engineer": 30.49309962016114},
+        "GuardianAngels": {"Enforcer": 27.404376861170505, "Hustler": 42.10252351813381, "Engineer": 30.49309962016114},
         "HoneyTrap": {"Enforcer": 26.98428598, "Muscle1": 30.86556191, "Muscle2": 42.15015211},
         "BiddingWar": {"Robber1": 7.100963041, "Driver": 12.5356157, "Robber2": 22.87302433, "Robber3": 31.67051915, "Bomber1": 7.846987259, "Bomber2": 17.97289051},
         "SneakyGitGrab": {"Imitator": 17.539756110007634, "Pickpocket": 50.831934101247086, "Hacker": 14.481791981545502, "Techie": 17.146517807199775},
@@ -105,100 +144,7 @@ const API_URL = "https://tornprobability.com:3000/api/GetRoleWeights";
         "DishItOut": {"Assassin": 37.3380808914086, "Muscle": 25.243817634035594, "Saboteur1": 14.639223669899579, "Saboteur2": 8.911747057590532, "Engineer": 13.867130747065687}
     };
 
-    function classStartsWith(prefix) {
-        return `[class^="${prefix}"], [class*=" ${prefix}"]`;
-    }
-
-    const SELECTORS = {
-        wrapper: classStartsWith("wrapper___"),
-        panelTitle: classStartsWith("panelTitle___"),
-        slotHeader: classStartsWith("slotHeader___"),
-        roleTitle: classStartsWith("title___"),
-        successChance: classStartsWith("successChance___")
-    };
-
-    function normalizeKey(value) {
-        return String(value || "")
-            .split("\n")[0]
-            .trim()
-            .toLowerCase()
-            .replace(/\s+/g, " ");
-    }
-
-    function compactKey(value) {
-        return String(value || "")
-            .split("\n")[0]
-            .trim()
-            .toLowerCase()
-            .replace(/[^a-z0-9\u00C0-\u017F]/gi, "");
-    }
-
-    function getRoleWeight(weights, ocKey, roleKey) {
-        if (!weights || typeof weights !== "object" || Array.isArray(weights)) return undefined;
-        const ocEntry = Object.entries(weights).find(([key]) => compactKey(key) === ocKey);
-        if (!ocEntry || !ocEntry[1] || typeof ocEntry[1] !== "object" || Array.isArray(ocEntry[1])) return undefined;
-        const value = Object.entries(ocEntry[1]).find(([key]) => compactKey(key) === roleKey)?.[1];
-        return Number.isFinite(value) ? value : undefined;
-    }
-
-    function getScenarioPanelFromTitle(titleEl) {
-        let current = titleEl.closest(SELECTORS.wrapper);
-        let best = current;
-
-        while (current) {
-            if (
-                current.matches?.(SELECTORS.wrapper) &&
-                current.contains(titleEl) &&
-                current.querySelector(SELECTORS.successChance)
-            ) {
-                best = current;
-            }
-
-            current = current.parentElement?.closest?.(SELECTORS.wrapper);
-        }
-
-        return best;
-    }
-
-    function getRoleSlots(panel) {
-        const slots = [];
-
-        panel.querySelectorAll(SELECTORS.slotHeader).forEach(header => {
-            let current = header.closest(SELECTORS.wrapper);
-
-            while (current && current !== panel) {
-                const hasHeader = current.querySelector(SELECTORS.slotHeader);
-                const hasRole = current.querySelector(SELECTORS.roleTitle);
-                const hasChance = current.querySelector(SELECTORS.successChance);
-                const hasPanelTitle = current.querySelector(SELECTORS.panelTitle);
-
-                if (hasHeader && hasRole && hasChance && !hasPanelTitle) {
-                    slots.push(current);
-                    break;
-                }
-
-                current = current.parentElement?.closest?.(SELECTORS.wrapper);
-            }
-        });
-
-        return Array.from(new Set(slots));
-    }
-
-    function processAllScenarios() {
-        const panels = new Set();
-
-        document.querySelectorAll(SELECTORS.panelTitle).forEach(title => {
-            const panel = getScenarioPanelFromTitle(title);
-            if (panel) {
-                panels.add(panel);
-            }
-        });
-
-        panels.forEach(processScenario);
-    }
-
     const defaultLevel = 70;
-    const defaultDecline = 700;
 
     const ocRoles = [
         {
@@ -294,7 +240,7 @@ const API_URL = "https://tornprobability.com:3000/api/GetRoleWeights";
             }
         },
         {
-            OCName: "Guardian Ángels", // Level 5
+            OCName: "Guardian Angels", // Level 5 (accent-insensitive matching covers "Guardian Ángels" too)
             Positions: { // 75.44% success rate
                 "Hustler": 70,
                 "Engineer": 68,
@@ -390,7 +336,6 @@ const API_URL = "https://tornprobability.com:3000/api/GetRoleWeights";
                 "Lookout": 68
             }
         },
-
         {
             OCName: "Clinical Precision", // Level 8
             Positions: { // 75.11% success rate
@@ -500,218 +445,400 @@ const API_URL = "https://tornprobability.com:3000/api/GetRoleWeights";
         // define role-specific requirements. Keeping requirements
         // generic until Crimehub publishes information on them
         {
-            OCName: "Best of the Lot", //level 2
+            OCName: "Best of the Lot", // Level 2
             Positions: `default_${defaultLevel}`
         },
         {
-            OCName: "Pet Project", // level 1
+            OCName: "Pet Project", // Level 1
             Positions: `default_${defaultLevel}`
         },
         {
-            OCName: "First Aid and Abet", // level 1
+            OCName: "First Aid and Abet", // Level 1
             Positions: `default_${defaultLevel}`
         }
     ];
 
-    function processScenario(panel) {
-        if (!panel.classList.contains('role-processed')) {
-            panel.classList.add('role-processed');
-        }
-
-        const ocName =
-              panel.querySelector(SELECTORS.panelTitle)?.innerText.trim() || "Unknown";
-
-        const cleanOCName = ocName.split("\n")[0].trim();
-
-        const slots = getRoleSlots(panel);
-
-        slots.forEach(slot => {
-            // Reset previous visual state before recalculating.
-            // This prevents bad layout after joining/leaving/changing slots.
-            slot.classList.remove("oc-has-contrib", "pulse-border-red");
-            slot.style.backgroundColor = "";
-            slot.style.outline = "";
-            slot.style.outlineOffset = "";
-
-            const oldContribLine = slot.querySelector(":scope > .oc-contrib-linewrap");
-            if (oldContribLine) {
-                oldContribLine.remove();
-            }
-
-            const roleElem =
-                  slot.querySelector(SELECTORS.roleTitle);
-
-            const chanceElem =
-                  slot.querySelector(SELECTORS.successChance);
-
-            if (!roleElem || !chanceElem) return;
-
-            const rawRole = roleElem.innerText.trim();
-            const successChance = parseInt(chanceElem.textContent.trim(), 10) || 0;
-            const joinBtn = slot.querySelector("button[class^='torn-btn joinButton'], button[class*=' torn-btn joinButton']");
-
-            // Prefer live AllenOne weights; fall back per role to the embedded snapshot.
-            const ocKeyCompact = compactKey(cleanOCName);
-            const roleKeyCompact = compactKey(rawRole);
-            const pctRaw = getRoleWeight(roleWeightsAPI, ocKeyCompact, roleKeyCompact)
-                ?? getRoleWeight(roleContributions, ocKeyCompact, roleKeyCompact);
-            const pct = Number.isFinite(pctRaw) ? Math.round(pctRaw * 100) / 100 : undefined;
-
-            if (typeof pct === "number") {
-                slot.classList.add("oc-has-contrib");
-
-                const wrap = document.createElement("div");
-                wrap.className = "oc-contrib-linewrap";
-
-                const text = document.createElement("span");
-                text.className = "oc-contrib-linetext";
-                text.textContent = `${pct}%`;
-
-                wrap.appendChild(text);
-                slot.appendChild(wrap);
-            }
-
-            const ocData = ocRoles.find(o =>
-                                        normalizeKey(o.OCName) === normalizeKey(cleanOCName)
-                                       );
-
-            let required = null;
-
-            if (ocData) {
-                if (
-                    typeof ocData.Positions === 'string' &&
-                    ocData.Positions.startsWith('default_')
-                ) {
-                    required = parseInt(ocData.Positions.split('_')[1], 10);
-                } else if (typeof ocData.Positions === 'object') {
-                    const roleEntry = Object.entries(ocData.Positions)
-                    .find(([roleName]) =>
-                          normalizeKey(roleName) === normalizeKey(rawRole)
-                         );
-
-                    if (roleEntry) {
-                        required = roleEntry[1];
-                    }
-                }
-            }
-
-            if (required === null) return;
-
-            const honorTexts = slot.querySelectorAll('.honor-text');
-            const userName = honorTexts.length > 1
-            ? honorTexts[1].textContent.trim()
-            : null;
-
-            if (!userName) {
-                slot.style.backgroundColor = successChance < required
-                    ? '#ff000061'
-                : '#21a61c61';
-
-                if (joinBtn && successChance < required) {
-                    joinBtn.setAttribute('disabled', '');
-                }
-            } else if (successChance < required) {
-                slot.classList.add('pulse-border-red');
-                slot.style.outline = '4px solid red';
-                slot.style.outlineOffset = '0px';
-            }
-        });
+    function classStartsWith(prefix) {
+        return `[class^="${prefix}"], [class*=" ${prefix}"]`;
     }
 
-    const observer = new MutationObserver(mutations => {
-        const panels = new Set();
+    const SELECTORS = {
+        wrapper: classStartsWith("wrapper___"),
+        panelTitle: classStartsWith("panelTitle___"),
+        slotHeader: classStartsWith("slotHeader___"),
+        roleTitle: classStartsWith("title___"),
+        successChance: classStartsWith("successChance___"),
+        joinButton: "button.torn-btn.joinButton, button.torn-btn[class^='joinButton___'], button.torn-btn[class*=' joinButton___']"
+    };
 
-        mutations.forEach(m => {
-            m.addedNodes.forEach(node => {
-                if (node.nodeType !== 1) return;
+    const SLOT_TEXT_FIELDS = [SELECTORS.roleTitle, SELECTORS.successChance, SELECTORS.panelTitle, ".honor-text"].join(", ");
 
-                if (node.matches?.(SELECTORS.panelTitle)) {
-                    const panel = getScenarioPanelFromTitle(node);
-                    if (panel) {
-                        panels.add(panel);
-                    }
+    function isCrimesHash() {
+        const tabParam = /(?:^|[#&?/])tab=([^&#/?]*)/i;
+        const match = tabParam.exec(window.location.hash) || tabParam.exec(window.location.search);
+        return match?.[1].toLowerCase() === "crimes";
+    }
+
+    function isPageActive() {
+        return document.visibilityState === "visible" && document.hasFocus() && isCrimesHash();
+    }
+
+    function getCrimesRoot() {
+        return document.getElementById("faction-crimes-root") || document.getElementById("factionCrimes-root");
+    }
+
+    function stripAccents(value) {
+        return String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    }
+
+    function normalizeKey(value) {
+        return stripAccents(value)
+            .split("\n")[0]
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, " ");
+    }
+
+    function compactKey(value) {
+        return stripAccents(value)
+            .split("\n")[0]
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9]/gi, "");
+    }
+
+    function isValidWeightsObject(obj) {
+        return Boolean(obj && typeof obj === "object" && !Array.isArray(obj));
+    }
+
+    function isValidRoleWeight(value) {
+        return Number.isFinite(value) && value >= -1 && value <= 100;
+    }
+
+    function isValidWeightsPayload(data) {
+        if (!isValidWeightsObject(data)) return false;
+        let validCount = 0;
+        for (const [crime, roles] of Object.entries(roleContributions)) {
+            const crimeKey = compactKey(crime);
+            for (const role of Object.keys(roles)) {
+                if (getRoleWeight(data, crimeKey, compactKey(role)) !== undefined && ++validCount >= 3) {
+                    return true;
                 }
-
-                node.querySelectorAll?.(SELECTORS.panelTitle).forEach(title => {
-                    const panel = getScenarioPanelFromTitle(title);
-                    if (panel) {
-                        panels.add(panel);
-                    }
-                });
-
-                if (node.matches?.(SELECTORS.successChance)) {
-                    let current = node.closest(SELECTORS.wrapper);
-
-                    while (current) {
-                        const title = current.querySelector?.(SELECTORS.panelTitle);
-                        if (title) {
-                            const panel = getScenarioPanelFromTitle(title);
-                            if (panel) {
-                                panels.add(panel);
-                            }
-                            break;
-                        }
-
-                        current = current.parentElement?.closest?.(SELECTORS.wrapper);
-                    }
-                }
-
-                node.querySelectorAll?.(SELECTORS.successChance).forEach(chance => {
-                    let current = chance.closest(SELECTORS.wrapper);
-
-                    while (current) {
-                        const title = current.querySelector?.(SELECTORS.panelTitle);
-                        if (title) {
-                            const panel = getScenarioPanelFromTitle(title);
-                            if (panel) {
-                                panels.add(panel);
-                            }
-                            break;
-                        }
-
-                        current = current.parentElement?.closest?.(SELECTORS.wrapper);
-                    }
-                });
-            });
-        });
-
-        panels.forEach(processScenario);
-    });
-
-    const targetNode = document.querySelector('#factionCrimes-root') || document.body;
-    observer.observe(targetNode, { childList: true, subtree: true });
-
-    window.addEventListener('load', () => {
-        processAllScenarios();
-    });
-
-    // Display the fallback immediately, even if the live request fails.
-    processAllScenarios();
-
-    GM_xmlhttpRequest({
-        method: "GET",
-        url: API_URL,
-        onload: (res) => {
-            try {
-                if (res.status < 200 || res.status >= 300) {
-                    throw new Error(`HTTP ${res.status}`);
-                }
-                const data = JSON.parse(res.responseText);
-                if (!data || typeof data !== "object" || Array.isArray(data)) {
-                    throw new Error("Invalid role weights response");
-                }
-                roleWeightsAPI = data;
-                console.log("[OC Role Display] Role Weights API loaded");
-
-                processAllScenarios();
-
-            } catch (e) {
-                console.warn("[OC Role Display] Invalid API response; using fallback weights", e);
             }
-        },
-        onerror: (err) => {
-            console.warn("[OC Role Display] API request failed; using fallback weights", err);
         }
-    });
+        return false;
+    }
 
+    function getRoleWeight(weights, ocKey, roleKey) {
+        if (!isValidWeightsObject(weights)) return undefined;
+        const ocEntry = Object.entries(weights).find(([key]) => compactKey(key) === ocKey);
+        if (!ocEntry || !isValidWeightsObject(ocEntry[1])) return undefined;
+        const value = Object.entries(ocEntry[1]).find(([key]) => compactKey(key) === roleKey)?.[1];
+        return isValidRoleWeight(value) ? value : undefined;
+    }
+
+    function loadCachedWeights() {
+        try {
+            const entry = JSON.parse(window.localStorage.getItem(CACHE_KEY));
+            if (entry && Number.isFinite(entry.timestamp) && entry.timestamp > 0 &&
+                entry.timestamp <= Date.now() && isValidWeightsPayload(entry.data)) return entry;
+        } catch {
+            // The embedded snapshot also works when storage is unavailable.
+        }
+        return null;
+    }
+
+    function scheduleWeightsCheck(at) {
+        clearTimeout(weightsTimer);
+        if (isPageActive() && observedCrimesRoot?.isConnected) {
+            weightsTimer = setTimeout(syncLifecycle, Math.max(0, at - Date.now()));
+        }
+    }
+
+    function ensureRoleWeightsLoaded() {
+        if (weightsFetchInFlight) return;
+        const stored = loadCachedWeights();
+        if (stored && (!weightsCache || stored.timestamp >= weightsCache.timestamp)) {
+            weightsCache = stored;
+            memoryCacheOnly = false;
+        }
+        // An explicit cache deletion takes effect on the next active check.
+        const freshEntry = memoryCacheOnly ? weightsCache : stored;
+        const nextCheck = Math.max(retryWeightsAt, freshEntry ? freshEntry.timestamp + CACHE_TTL_MS : 0);
+        if (nextCheck > Date.now()) {
+            scheduleWeightsCheck(nextCheck);
+            return;
+        }
+        if (typeof GM_xmlhttpRequest !== "function") return;
+
+        function failed(reason) {
+            weightsFetchInFlight = false;
+            retryWeightsAt = Date.now() + API_RETRY_COOLDOWN_MS;
+            scheduleWeightsCheck(retryWeightsAt);
+            console.warn("[OC Role Display] Using cached or embedded weights", reason);
+        }
+
+        function loaded(response) {
+            if (response.status < 200 || response.status >= 300) {
+                failed("HTTP " + response.status);
+                return;
+            }
+            let data;
+            try {
+                data = JSON.parse(response.responseText);
+                if (!isValidWeightsPayload(data)) throw new Error("Unrecognized role weights");
+            } catch (error) {
+                failed(error);
+                return;
+            }
+            weightsFetchInFlight = false;
+            retryWeightsAt = 0;
+            weightsCache = { timestamp: Date.now(), data };
+            try {
+                window.localStorage.setItem(CACHE_KEY, JSON.stringify(weightsCache));
+                memoryCacheOnly = false;
+            } catch {
+                memoryCacheOnly = true;
+            }
+            scheduleWeightsCheck(weightsCache.timestamp + CACHE_TTL_MS);
+            if (isPageActive() && observedCrimesRoot?.isConnected) processAllScenarios(observedCrimesRoot);
+        }
+
+        weightsFetchInFlight = true;
+        try {
+            GM_xmlhttpRequest({
+                method: "GET", url: API_URL, anonymous: true, timeout: API_TIMEOUT_MS,
+                onload: loaded, onerror: failed, ontimeout: () => failed("Timed out"),
+                onabort: () => failed("Request aborted")
+            });
+        } catch (error) {
+            failed(error);
+        }
+    }
+
+    // Stop at the individual crime card even if Torn wraps several cards together.
+    function scenarioFor(node, root) {
+        let wrapper = node.closest(SELECTORS.wrapper);
+        while (wrapper && root.contains(wrapper)) {
+            const titles = wrapper.querySelectorAll(SELECTORS.panelTitle);
+            if (titles.length > 1) return null;
+            if (titles.length === 1 && wrapper.querySelector(SELECTORS.slotHeader)) return wrapper;
+            wrapper = wrapper.parentElement?.closest(SELECTORS.wrapper);
+        }
+        return null;
+    }
+
+    function getRoleSlots(panel) {
+        const slots = new Set();
+        for (const header of panel.querySelectorAll(SELECTORS.slotHeader)) {
+            let current = header.closest(SELECTORS.wrapper);
+            let slot = null;
+            while (current && current !== panel && !current.querySelector(SELECTORS.panelTitle)) {
+                if (current.querySelectorAll(SELECTORS.slotHeader).length !== 1) break;
+                slot = current;
+                if (slot.querySelector(SELECTORS.roleTitle) && slot.querySelector(SELECTORS.successChance)) break;
+                current = current.parentElement?.closest(SELECTORS.wrapper);
+            }
+            if (slot) slots.add(slot);
+        }
+        return Array.from(slots);
+    }
+
+    function requiredChanceFor(crimeName, roleName) {
+        const crime = ocRoles.find(entry => normalizeKey(entry.OCName) === normalizeKey(crimeName));
+        if (!crime) return null;
+        if (typeof crime.Positions === "string") {
+            return parseInt(crime.Positions.split("_")[1], 10);
+        }
+        const role = Object.entries(crime.Positions).find(([name]) => normalizeKey(name) === normalizeKey(roleName));
+        return role?.[1] ?? null;
+    }
+
+    function readSlotEligibility(slot, crimeName) {
+        const rawRole = slot.querySelector(SELECTORS.roleTitle)?.innerText.trim();
+        const chanceEl = slot.querySelector(SELECTORS.successChance);
+        if (!rawRole || !chanceEl) return null;
+
+        const successChance = parseInt(chanceEl.textContent.trim(), 10) || 0;
+        const required = requiredChanceFor(crimeName, rawRole);
+        const occupied = Array.from(slot.querySelectorAll(".honor-text")).some(name => name.textContent.trim());
+        return { rawRole, successChance, required, occupied };
+    }
+
+    function updateJoinBlock(button, eligibility) {
+        const blocked = Boolean(
+            eligibility && !eligibility.occupied && eligibility.required !== null &&
+            eligibility.successChance < eligibility.required
+        );
+        button?.toggleAttribute("data-oc-nsbs-blocked", blocked);
+        return blocked;
+    }
+
+    // Native button activation (including Enter and Space) dispatches a click.
+    // Check the current slot even when React has reused or just replaced its button.
+    function guardJoinClick(event) {
+        if (document.visibilityState !== "visible" || !isCrimesHash()) return;
+        const targetEl = event.target instanceof Element ? event.target : event.target?.parentElement;
+        const button = targetEl?.closest?.(SELECTORS.joinButton);
+        if (!button) return;
+        const root = getCrimesRoot();
+        if (!root?.contains(button)) return;
+
+        // Let the first click focus Torn if necessary. Only read game data once focused.
+        let block = !document.hasFocus();
+        if (!block) {
+            const panel = scenarioFor(button, root);
+            if (!panel) return;
+            const slot = getRoleSlots(panel).find(entry => entry.contains(button));
+            const crimeName = panel.querySelector(SELECTORS.panelTitle).innerText;
+            block = updateJoinBlock(button, slot && readSlotEligibility(slot, crimeName));
+        }
+        if (block) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+        }
+    }
+
+    function processScenario(panel) {
+        if (!panel || !panel.isConnected) return;
+
+        panel.classList.add("role-processed");
+        const crimeName = panel.querySelector(SELECTORS.panelTitle)?.innerText || "";
+        const crimeKey = compactKey(crimeName);
+
+        for (const slot of getRoleSlots(panel)) {
+            const eligibility = readSlotEligibility(slot, crimeName);
+            const blocked = updateJoinBlock(slot.querySelector(SELECTORS.joinButton), eligibility);
+            const rated = eligibility && eligibility.required !== null;
+            slot.classList.toggle("oc-nsbs-below", blocked);
+            slot.classList.toggle("oc-nsbs-eligible", Boolean(rated && !eligibility.occupied && !blocked));
+            slot.classList.toggle("oc-nsbs-low-occupied",
+                Boolean(rated && eligibility.occupied && eligibility.successChance < eligibility.required));
+
+            const roleKey = compactKey(eligibility?.rawRole);
+            const weight = getRoleWeight(weightsCache?.data, crimeKey, roleKey)
+                ?? getRoleWeight(roleContributions, crimeKey, roleKey);
+            let line = slot.querySelector(":scope > .oc-contrib-linewrap");
+            slot.classList.toggle("oc-has-contrib", weight !== undefined);
+            if (weight === undefined) {
+                line?.remove();
+                continue;
+            }
+            if (!line) {
+                line = document.createElement("div");
+                line.className = "oc-contrib-linewrap";
+                slot.appendChild(line);
+            }
+            let text = line.querySelector(".oc-contrib-linetext");
+            if (!text) {
+                text = document.createElement("span");
+                text.className = "oc-contrib-linetext";
+                line.appendChild(text);
+            }
+            const label = String(Math.round(weight * 100) / 100) + "%";
+            if (text.textContent !== label) text.textContent = label;
+        }
+    }
+
+    function processAllScenarios(root) {
+        const panels = new Set();
+        for (const title of root.querySelectorAll(SELECTORS.panelTitle)) {
+            const panel = scenarioFor(title, root);
+            if (panel) panels.add(panel);
+        }
+        panels.forEach(processScenario);
+    }
+
+    function queuePanelChanges(records, root) {
+        if (!isPageActive() || !root.isConnected) {
+            syncLifecycle();
+            return;
+        }
+        const addPanel = node => {
+            const panel = scenarioFor(node, root);
+            if (panel) pendingPanels.add(panel);
+        };
+        for (const record of records) {
+            const target = record.target.nodeType === 1 ? record.target : record.target.parentElement;
+            if (!target || !root.contains(target) || target.closest(".oc-contrib-linewrap")) continue;
+            const elements = [...record.addedNodes, ...record.removedNodes].filter(node => node.nodeType === 1);
+            if (!elements.length) {
+                // Ignore ticking countdowns. React can update a chance or role as a text node.
+                if (target.closest(SLOT_TEXT_FIELDS)) addPanel(target);
+                continue;
+            }
+            if (!record.removedNodes.length && elements.every(node => node.classList.contains("oc-contrib-linewrap"))) continue;
+            for (const node of record.addedNodes) {
+                if (node.nodeType !== 1) continue;
+                if (node.matches(SELECTORS.panelTitle)) addPanel(node);
+                node.querySelectorAll(SELECTORS.panelTitle).forEach(addPanel);
+            }
+            addPanel(target);
+        }
+        if (pendingPanels.size && panelFrame === null) {
+            panelFrame = window.requestAnimationFrame(() => {
+                panelFrame = null;
+                if (isPageActive() && root.isConnected) pendingPanels.forEach(processScenario);
+                pendingPanels.clear();
+            });
+        }
+    }
+
+    function stopWatching() {
+        clearTimeout(weightsTimer);
+        clearTimeout(rootTimer);
+        rootTimer = null;
+        if (panelFrame !== null) window.cancelAnimationFrame(panelFrame);
+        panelFrame = null;
+        pendingPanels.clear();
+        crimesObserver?.disconnect();
+        crimesObserver = null;
+        observedCrimesRoot?.classList.remove("oc-nsbs-active");
+        observedCrimesRoot = null;
+    }
+
+    function syncLifecycle() {
+        if (!isPageActive()) {
+            stopWatching();
+            return;
+        }
+
+        const root = getCrimesRoot();
+        if (!root) {
+            if (observedCrimesRoot) stopWatching();
+            // Only check the two mount IDs. Never observe the whole page for crime data.
+            if (rootTimer === null) {
+                rootTimer = setTimeout(() => {
+                    rootTimer = null;
+                    syncLifecycle();
+                }, ROOT_CHECK_DELAY_MS);
+            }
+            return;
+        }
+        if (root !== observedCrimesRoot) {
+            stopWatching();
+            if (!style.isConnected) document.head.appendChild(style);
+            observedCrimesRoot = root;
+            root.classList.add("oc-nsbs-active");
+            crimesObserver = new MutationObserver(records => queuePanelChanges(records, root));
+            crimesObserver.observe(root, { childList: true, characterData: true, subtree: true });
+            // Direct child changes on the ancestors signal when Torn replaces the root.
+            for (let parent = root.parentElement; parent; parent = parent.parentElement) {
+                crimesObserver.observe(parent, { childList: true });
+            }
+        }
+        ensureRoleWeightsLoaded();
+        processAllScenarios(root);
+    }
+
+    document.addEventListener("visibilitychange", syncLifecycle);
+    window.addEventListener("click", guardJoinClick, true);
+    window.addEventListener("focus", syncLifecycle);
+    window.addEventListener("blur", stopWatching);
+    window.addEventListener("hashchange", syncLifecycle);
+    window.addEventListener("popstate", syncLifecycle);
+    window.addEventListener("load", syncLifecycle);
+
+    // Initialize immediately if the crimes tab is currently active and focused.
+    syncLifecycle();
 })();
